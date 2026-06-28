@@ -1,4 +1,4 @@
-🛡️ Discord Honeypot Anti-Spam Cog
+# 🛡️ Discord Honeypot Anti-Spam Cog
 
 A lightweight Discord.py 2.x Cog designed to automatically detect compromised accounts and stop mass spam attacks.
 
@@ -35,7 +35,7 @@ Perfect for communities frequently targeted by:
 ⸻
 
 📂 Project Structure
-
+```
 project/
 │
 ├── main.py
@@ -44,6 +44,7 @@ project/
 │
 └── cogs/
     └── anti_spam.py
+```
 
 Simply place:
 
@@ -62,6 +63,7 @@ folder and load it as a normal Cog.
 Inside anti_spam.py edit:
 
 HONEYPOT_CHANNEL_ID = 123456789012345678
+
 LOG_CHANNEL_ID = 123456789012345678
 
 Optional:
