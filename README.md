@@ -18,19 +18,29 @@ Perfect for communities frequently targeted by:
 
 ⸻
 
-✨ Features
+### ✨ Features
 
-✅ Honeypot channel detection
+* Supports multiple honeypot channels simultaneously.
+* Automatically applies a 7-day timeout when a user sends a message in a honeypot channel.
+* Deletes all messages sent by the detected user within the last hour.
+* Continues execution even when the bot lacks certain permissions.
+* Detailed permission diagnostics included in moderation logs.
+* Logs exactly which permissions are missing and in which channels.
+* Terminal output synchronized with Discord moderation logs.
+* Lightweight, easy to integrate, and built for Discord.py 2.x.
 
-✅ Automatic 7-day timeout
+### 🔄 Recent Improvements
 
-✅ Bulk delete recent messages
+* Added support for multiple honeypot channels (`HONEYPOT_CHANNEL_IDS`).
+* Improved fault tolerance: the bot no longer stops if a single action fails.
+* Added detailed permission tracking for:
 
-✅ Detailed moderation logs
-
-✅ Lightweight and easy to integrate
-
-✅ Built for Discord.py 2.x
+  * `Manage Messages`
+  * `Read Message History`
+  * `Moderate Members`
+* Added Discord embed logs for missing permissions.
+* Added terminal diagnostics for easier debugging.
+* Improved moderation transparency by reporting exactly where permission issues occur.
 
 ⸻
 
