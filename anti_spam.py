@@ -4,8 +4,8 @@ from datetime import timedelta, datetime, timezone
 
 # ================= CONFIG =================
 
-HONEYPOT_CHANNEL_ID = ___  # Channel bẫy
-LOG_CHANNEL_ID = ___        # Kênh log
+HONEYPOT_CHANNEL_IDS = ( xxx, xxx, ) # Channel bẫy — thay bằng ID thật 
+LOG_CHANNEL_ID = xxx # Kênh log
 
 # ==========================================
 
@@ -20,21 +20,31 @@ class AntiSpam(commands.Cog):
             return
 
         # Chỉ xử lý channel honeypot
-        if message.channel.id != HONEYPOT_CHANNEL_ID:
+        if message.channel.id not in HONEYPOT_CHANNEL_IDS:
             return
 
         member = message.author
 
+        missing_perms = []  # Danh sách quyền thiếu để log
+
         try:
             # Xóa tin nhắn vừa gửi
-            await message.delete()
- 
+            try:
+                await message.delete()
+            except discord.Forbidden:
+                missing_perms.append(f"⚠️ Thiếu quyền **Manage Messages** tại {message.channel.mention} — không thể xóa tin nhắn honeypot")
+                print(f"[AntiSpam] Thiếu quyền Manage Messages tại #{message.channel.name}")
+
             # Timeout 7 ngày
-            timeout_until = discord.utils.utcnow() + timedelta(days=7)
-            await member.timeout(
-                timeout_until,
-                reason="Triggered Anti-Spam Honeypot"
-            )
+            try:
+                timeout_until = discord.utils.utcnow() + timedelta(days=7)
+                await member.timeout(
+                    timeout_until,
+                    reason="Triggered Anti-Spam Honeypot"
+                )
+            except discord.Forbidden:
+                missing_perms.append(f"⚠️ Thiếu quyền **Moderate Members** — không thể timeout {member.mention}")
+                print(f"[AntiSpam] Thiếu quyền Moderate Members — không thể timeout {member}")
 
             deleted_count = 0
 
@@ -43,10 +53,20 @@ class AntiSpam(commands.Cog):
 
             for channel in message.guild.text_channels:
 
-                # Bot không có quyền đọc hoặc quản lý
                 perms = channel.permissions_for(message.guild.me)
 
-                if not perms.read_message_history or not perms.manage_messages:
+                # Log cụ thể quyền nào thiếu tại kênh nào
+                if not perms.read_message_history and not perms.manage_messages:
+                    missing_perms.append(f"⚠️ Thiếu quyền **Read Message History** và **Manage Messages** tại {channel.mention}")
+                    print(f"[AntiSpam] Thiếu quyền Read Message History và Manage Messages tại #{channel.name}")
+                    continue
+                elif not perms.read_message_history:
+                    missing_perms.append(f"⚠️ Thiếu quyền **Read Message History** tại {channel.mention}")
+                    print(f"[AntiSpam] Thiếu quyền Read Message History tại #{channel.name}")
+                    continue
+                elif not perms.manage_messages:
+                    missing_perms.append(f"⚠️ Thiếu quyền **Manage Messages** tại {channel.mention}")
+                    print(f"[AntiSpam] Thiếu quyền Manage Messages tại #{channel.name}")
                     continue
 
                 try:
@@ -56,6 +76,9 @@ class AntiSpam(commands.Cog):
                             try:
                                 await msg.delete()
                                 deleted_count += 1
+                            except discord.Forbidden:
+                                missing_perms.append(f"⚠️ Thiếu quyền **Manage Messages** tại {channel.mention} — không thể xóa tin nhắn")
+                                print(f"[AntiSpam] Thiếu quyền Manage Messages tại #{channel.name} — không thể xóa tin nhắn")
                             except Exception:
                                 pass
 
@@ -110,10 +133,21 @@ class AntiSpam(commands.Cog):
                     inline=False
                 )
 
+                # Thêm field cảnh báo quyền thiếu (nếu có)
+                if missing_perms:
+                    # Giới hạn 1024 ký tự (limit của embed field)
+                    perms_text = "\n".join(missing_perms)
+                    if len(perms_text) > 1024:
+                        perms_text = perms_text[:1021] + "..."
+
+                    embed.add_field(
+                        name="🔒 Thiếu quyền",
+                        value=perms_text,
+                        inline=False
+                    )
+
                 await log_channel.send(embed=embed)
 
-        except discord.Forbidden:
-            print("[AntiSpam] Bot thiếu quyền.")
         except Exception as e:
             print(f"[AntiSpam] Error: {e}")
 
